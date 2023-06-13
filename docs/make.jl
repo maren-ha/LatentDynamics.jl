@@ -16,6 +16,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/maren-ha/LatentDynamics.jl",
+    repo = "github.com/maren-ha/LatentDynamics.jl.git",
     devbranch = "main"
 )
