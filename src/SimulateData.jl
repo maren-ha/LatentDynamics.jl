@@ -2,12 +2,12 @@
     mutable struct simdata
 
 Struct to serve as a container for simulated data, consisting of the following fields: 
-    - `xs`: vector of matrices (n_variables x n_timepoints) of simulated values 
-        of the different variables across time for each patient
-    - `xs_baseline`: vector of vectors of baseline variable measurements for each patient
-    - `tvals`: vector of vectors of follow-up time points for each patient
-    - `group1`: vector of indices of patients belonging to group 1
-    - `group2`: vector of indices of patients belonging to group 2
+- `xs`: vector of matrices (n_variables x n_timepoints) of simulated values 
+    of the different variables across time for each patient
+- `xs_baseline`: vector of vectors of baseline variable measurements for each patient
+- `tvals`: vector of vectors of follow-up time points for each patient
+- `group1`: vector of indices of patients belonging to group 1
+- `group2`: vector of indices of patients belonging to group 2
 """
 struct simdata
     xs
@@ -28,31 +28,31 @@ Generates simulated data by sampling `n` observations of `p` variables at betwee
     `σ_var` and `σ_ind`. 
 
 # Arguments: 
-    - `n`: number of individuals to simulate 
-    - `p`: number of time-dependent variables to simulate - should be divisible by the number of the true underlying 
-        trajectory dimensions, so the first (p/n_true_dimensions) variables can be noisy versions of the first dimension of 
-        the true dynamics, and so on. 
-    - `true_u0`: vector stating the initial condition of the ground-truth underlying ODE systems from which to simulate the data 
-    - `sol_group1`: true ODE solution of the first group 
-    - `sol_group2`: true ODE solution of the second group 
+- `n`: number of individuals to simulate 
+- `p`: number of time-dependent variables to simulate - should be divisible by the number of the true underlying 
+    trajectory dimensions, so the first (p/n_true_dimensions) variables can be noisy versions of the first dimension of 
+    the true dynamics, and so on. 
+- `true_u0`: vector stating the initial condition of the ground-truth underlying ODE systems from which to simulate the data 
+- `sol_group1`: true ODE solution of the first group 
+- `sol_group2`: true ODE solution of the second group 
 
 # Optional keyword arguments: 
-    - `t_start`: Earliest time point possible for follow-up measurements, start of the interval from which to sample the 
-        subsequent measurement time point(s). Default = 1.5
-    - `t_end`: Latest time point possible for follow-up measurements, end of the interval from which to sample the 
-        subsequent measurement time point(s). Default = 10
-    - `maxntps`: maximum number of time points per individual after the baseline timepoint. Default = 1
-    - `dt`: time steps at which to solve the ODE. Needed to ensure correct array sizes. Default = 0.1
-    - `σ_var`: variance with which to sample the variable-specific error terms. Default = 0.1
-    - `σ_ind`: variance with which to sample the individual-specific error terms. Default = 0.5
+- `t_start`: Earliest time point possible for follow-up measurements, start of the interval from which to sample the 
+    subsequent measurement time point(s). Default = 1.5
+- `t_end`: Latest time point possible for follow-up measurements, end of the interval from which to sample the 
+    subsequent measurement time point(s). Default = 10
+- `maxntps`: maximum number of time points per individual after the baseline timepoint. Default = 1
+- `dt`: time steps at which to solve the ODE. Needed to ensure correct array sizes. Default = 0.1
+- `σ_var`: variance with which to sample the variable-specific error terms. Default = 0.1
+- `σ_ind`: variance with which to sample the individual-specific error terms. Default = 0.5
 
 # Returns:
-    - `xs`: vector of length `n` = n_individuals, where the `i`th element is a (n_vars=p x n_timepoints) matrix 
-        containing the simulated values of the time-dependent variables of the `i`th individual in the dataset
-    - `tvals`: vector of length `n` = n_individuals, where the `i`th element is a vector of length 1 (or more generally n_timepoints_i)
-        containing the simulated time point of the `i`th individual's second measurement (or all the timepoints after the baseline visit)
-    - `group1`: indices of all individuals in group1 
-    - `group2`: indices of all individuals in group1 
+- `xs`: vector of length `n` = n_individuals, where the `i`th element is a (n_vars=p x n_timepoints) matrix 
+    containing the simulated values of the time-dependent variables of the `i`th individual in the dataset
+- `tvals`: vector of length `n` = n_individuals, where the `i`th element is a vector of length 1 (or more generally n_timepoints_i)
+    containing the simulated time point of the `i`th individual's second measurement (or all the timepoints after the baseline visit)
+- `group1`: indices of all individuals in group1 
+- `group2`: indices of all individuals in group1 
 """
 function generate_xs(n, p, true_u0, sol_group1, sol_group2; 
     t_start=1.5f0, t_end=10f0, maxntps=10, dt=0.1f0, σ_var=0.1f0, σ_ind=0.5f0)
@@ -119,18 +119,18 @@ Generates simulated baseline data by sampling `n` observations of `q` baseline v
     repectively. For the noise variables, data are simulated by drawing from N(0, σ_noise). 
 
 # Arguments: 
-    - `n`: number of individuals to simulate 
-    - `q`: number of baseline variables to simulate 
-    - `q_info`: number of informative baseline variables. 
-    - `group1`: indices of all individuals in group1 - since [group1, group2] = {1,...,n}, the `group2` indices can be inferred from that
+- `n`: number of individuals to simulate 
+- `q`: number of baseline variables to simulate 
+- `q_info`: number of informative baseline variables. 
+- `group1`: indices of all individuals in group1 - since [group1, group2] = {1,...,n}, the `group2` indices can be inferred from that
 
 # Optional keyword arguments: 
-    - `σ_info`: variance with which to sample from the group membership information in the informative baseline variables terms. Default = 1
-    - `σ_noise`: variance with which to sample the noise baseline variables terms. Default = 1
+- `σ_info`: variance with which to sample from the group membership information in the informative baseline variables terms. Default = 1
+- `σ_noise`: variance with which to sample the noise baseline variables terms. Default = 1
 
 # Returns:
-    - `x_params`: vector of length `n` = n_individuals, where the `i`th  element is a vector of length (n_baselinevars=q)
-        containing the baseline information for the `i`th individual in the dataset 
+- `x_params`: vector of length `n` = n_individuals, where the `i`th  element is a vector of length (n_baselinevars=q)
+    containing the baseline information for the `i`th individual in the dataset 
 """
 function generate_baseline(n, q, q_info, group1; σ_info=1.0f0, σ_noise=1.0f0)
     zs = fill(1.0f0,(n,1))
@@ -154,18 +154,18 @@ Generates simulated baseline data by sampling `n` observations of `q` baseline v
     For the noise variables, data are simulated by drawing from N(0, σ_noise). 
 
 # Arguments: 
-    - `n`: number of individuals to simulate
-    - `q`: number of baseline variables to simulate 
-    - `q_info`: number of informative baseline variables. 
-    - `group1`: indices of all individuals in group1 - since [group1, group2] = {1,...,n}, the `group2` indices can be inferred from that
+- `n`: number of individuals to simulate
+- `q`: number of baseline variables to simulate 
+- `q_info`: number of informative baseline variables. 
+- `group1`: indices of all individuals in group1 - since [group1, group2] = {1,...,n}, the `group2` indices can be inferred from that
 
 # Optional keyword arguments: 
-    - `σ_info`: variance with which to sample from the group membership information in the informative baseline variables terms. Default = 0.1. 
-    - `σ_noise`: variance with which to sample the noise baseline variables terms. Default = 0.1. 
+- `σ_info`: variance with which to sample from the group membership information in the informative baseline variables terms. Default = 0.1. 
+- `σ_noise`: variance with which to sample the noise baseline variables terms. Default = 0.1. 
 
 # Returns:
-    - `x_params`: vector of length `n` = n_individuals, where the `i`th  element is a vector of length (n_baselinevars=q)
-        containing the baseline information for the `i`th individual in the dataset 
+- `x_params`: vector of length `n` = n_individuals, where the `i`th  element is a vector of length (n_baselinevars=q)
+    containing the baseline information for the `i`th individual in the dataset 
 """
 function generate_baseline(n, q, q_info, group1, trueparams_group1, trueparams_group2; 
     σ_info=0.1f0, σ_noise=0.1f0)
