@@ -312,7 +312,7 @@ function train_model!(m::odevae,
     verbose::Bool=true, 
     plotting::Bool=true
     )
-    if isnothing(selected_ids) || length(selected_ids) != 12
+    if (isnothing(selected_ids) || length(selected_ids) != 12) && plotting
         selected_ids = rand(ids,12)
     end
     # prepare training
