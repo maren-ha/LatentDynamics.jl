@@ -1,3 +1,14 @@
+"""
+    mutable struct SMATestData
+
+Struct to serve as a container for the SMArtCARE data, consisting of the following fields: 
+    - `test`: name of the motor function test for which the data is collected
+    - `xs`: vector of matrices (n_items x n_timepoints) of the item scores across time of
+             the chosen test for each patient
+    - `xs_baseline`: vector of vectors of baseline variable measurements for each patient
+    - `tvals`: vector of vectors of follow-up time points for each patient
+    - `ids`: vector of patient IDs
+"""
 mutable struct SMATestData
     test::String
     xs::Vector{Matrix{Float32}}
@@ -21,6 +32,27 @@ function get_test_variables(test, colnames)
     return test_vars
 end
 
+"""
+    get_SMArtCARE_data(test::String, baseline_df, timedepend_df; extended_output::Bool=false)
+
+Function to preprocess the SMArtCARE data for a specific test. The function returns an `SMATestData` struct with the extracted information 
+    on time-dependent and baseline variables, follow-up time points and IDs of all patients for whom the chosen test was conducted.
+
+    From the provided input dataframes, the function first filters the time-dependent dataframe for patients that have the selected test conducted. 
+    The dataframe is then subset to the variables of the items of the specific test. 
+    The baseline dataframe is subset to the same patients. 
+    For each patient, outlier time points are filtered out. 
+    An outlier is classified as a time point where the difference to the previous time point is larger than 2 times the 
+    interquartile range of all difference between subsequent time points for that patient.
+    Additionally, the variance of the sum score of the test is calculated, to allow for potential further subsequent filtering.
+
+# Arguments
+    - `test`: name of the motor function test for which the data is collected
+    - `baseline_df`: DataFrame containing the baseline variables for all patients
+    - `timedepend_df`: DataFrame containing the time-dependent variables for all patients
+    - `extended_output`: if `true`, the function also returns the calculated variances of the sumscore for each patient 
+        and the time point masks that show which time points where filtered out for each patient. 
+"""
 function get_SMArtCARE_data(test::String, baseline_df, timedepend_df; extended_output::Bool=false)
 
     testname="test_$test"
@@ -132,6 +164,23 @@ end
 
 logit(p) = log(p) - log(1-p)
 
+"""
+    recode_SMArtCARE_data(testdata::SMATestData)
+
+Recodes the time-dependent item values in an `SMATestData` struct to be between 0 and 1. 
+    Original item levels are integers between 0 and 2 for all items except item a, which has values between
+    0 and 6. 
+    Each item is separately mapped to numbers between 0 and 1 and the values are subsequently logit-transformed. 
+    A new `SMATestData` struct is returned, where the recoded values are stored in the `xs` field. 
+
+# Arguments
+    - `testdata::SMATestData`: the test data to be recoded
+    - `recoding_dict`: Dictionary specifying the numbers item levels should be recoded to for all items except a; 
+        default is Dict(0 => 0.1, 1 => 0.5, 2 => 0.9) and this is what has been used for all experiments. 
+    - `recoding_dict_itema`: Dictionary specifying the numbers item levels should be recoded to for item a; 
+        default is Dict(0 => 0.1, 1 => 0.2, 2 => 0.3, 3 => 0.5, 4 => 0.7, 5 => 0.8, 6 => 0.9) and this is what 
+        has been used for all experiments.
+"""
 function recode_SMArtCARE_data(testdata::SMATestData)
     recoding_dict = Dict(0 => 0.1, 1 => 0.5, 2 => 0.9)
     recoding_dict_itema = Dict(0 => 0.1, 1 => 0.2, 2 => 0.3, 3 => 0.5, 4 => 0.7, 5 => 0.8, 6 => 0.9)
