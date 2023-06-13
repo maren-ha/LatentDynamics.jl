@@ -1,11 +1,14 @@
 module LatentDynamics 
 
-using GLM 
+using DataFrames
 using Distributions 
 using Flux
+using GLM 
 using LaTeXStrings
 using Plots
 using Parameters
+using Random
+using StatsBase
 
 include("PreprocessingSMArtCARE.jl")
 include("SimulateData.jl")
