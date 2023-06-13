@@ -1,5 +1,7 @@
 # LatentDynamics.jl 
 
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://maren-ha.github.io/LatentDynamics.jl/dev/)
+
 ![](figures/repo_intro_simulation.jpg)
 
 ## Overview
@@ -23,7 +25,7 @@ using LatentDynamics
 
 ## Demo example 
 
-The following illustrates a simple example of how to use the package using simulated data. For more details, see the documentation of the individual functions accessible by typing `?` followed by the function name in the Julia REPL, and in the documentation page. 
+The following illustrates a simple example of how to use the package using simulated data. For more details, see the documentation of the individual functions accessible by typing `?` followed by the function name in the Julia REPL, and in the [documentation pages](https://maren-ha.github.io/LatentDynamics.jl/dev/). 
 
 First, we install and load the necessary packages: 
 

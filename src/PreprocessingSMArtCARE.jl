@@ -38,13 +38,13 @@ end
 Function to preprocess the SMArtCARE data for a specific test. The function returns an `SMATestData` struct with the extracted information 
     on time-dependent and baseline variables, follow-up time points and IDs of all patients for whom the chosen test was conducted.
 
-    From the provided input dataframes, the function first filters the time-dependent dataframe for patients that have the selected test conducted. 
-    The dataframe is then subset to the variables of the items of the specific test. 
-    The baseline dataframe is subset to the same patients. 
-    For each patient, outlier time points are filtered out. 
-    An outlier is classified as a time point where the difference to the previous time point is larger than 2 times the 
-    interquartile range of all difference between subsequent time points for that patient.
-    Additionally, the variance of the sum score of the test is calculated, to allow for potential further subsequent filtering.
+From the provided input dataframes, the function first filters the time-dependent dataframe for patients that have the selected test conducted. 
+The dataframe is then subset to the variables of the items of the specific test. 
+The baseline dataframe is subset to the same patients. 
+For each patient, outlier time points are filtered out. 
+An outlier is classified as a time point where the difference to the previous time point is larger than 2 times the 
+interquartile range of all difference between subsequent time points for that patient.
+Additionally, the variance of the sum score of the test is calculated, to allow for potential further subsequent filtering.
 
 # Arguments
 - `test`: name of the motor function test for which the data is collected
