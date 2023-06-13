@@ -11,7 +11,7 @@ The package includes functions for defining and training the VAE with and ODE-ba
 
 For more details, please have a look at our manuscript [Hackenberg et al. (2023) A statistical approach to latent dynamic modeling with differential equations](arXiv_link).
 
-## Get started 
+## Getting started 
 
 The package can be installed from this GitHub repository via the following command: 
 
