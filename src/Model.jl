@@ -14,7 +14,7 @@
 Calculates the analytical solution of a linear system of ODEs with constant coefficients 
     at a time point `t`, for a system matrix `A`, a constant vector `c` and an initial value `x0`.
     
-    Returns the solution `x(t)` and the matrix exponential `e^{At}`.
+Returns the solution `x(t)` and the matrix exponential `e^{At}`.
 """
 function generalsolution(t, x0::Vector{Float32}, A::Matrix{Float32}, c::Vector{Float32})
     eAt = exp(A.*t)
@@ -27,7 +27,7 @@ end
 Calculates the analytical solution of a constant system of ODEs at a time point `t`, 
     for a constant vector `c` and an initial value `x0`.
     
-    Returns the solution `x(t)` and the matrix exponential `e^{At}` = 1.0.
+Returns the solution `x(t)` and the matrix exponential `e^{At}` = 1.0.
 """
 function generalsolution(t, x0::Vector{Float32}, p::Vector{Float32}) # for drift only solution 
     return p.*t + x0, 1.0f0
@@ -125,7 +125,26 @@ end
 #------------------------------
 # define and initialize model 
 #------------------------------
+"""
+    odevae
 
+Struct for an ODE-VAE model, with the following fields:
+- `p`: number of VAE input dimensions, i.e., number of time-dependent variables
+- `q`: number of input dimensions for the baseline neural net, i.e., number of baseline variables
+- `zdim`: number of latent dimensions
+- `ODEnet`: neural net to map baseline variables to individual-specific ODE parameters 
+    (number of ODE parameters depends on the ODE system specified by the `dynamics` function)
+- `encoder`: neural net to map input data to latent space
+- `encodedμ`: neural net layer parameterizing the mean of the latent space
+- `encodedlogσ`: neural net layer parameterizing the log variance of the latent space
+- `decoder`: neural net to map latent variable to reconstructed input data
+- `decodedμ`: neural net layer parameterizing the mean of the reconstructed input data
+- `decodedlogσ`: neural net layer parameterizing the log variance of the reconstructed input data
+- `dynamics`: one of `params_fullinhomogeneous`, `params_offdiagonalinhomogeneous`, 
+    `params_diagonalinhomogeneous`, `params_driftonly`, `params_fullhomogeneous`, 
+    `params_offdiagonalhomogeneous`, `params_diagonalhomogeneous`: function to map a parameter vector
+    (=the output of the `ODEnet`) to the system matrix and constant vector of the ODE system
+"""
 mutable struct odevae
     p::Int
     q::Int
@@ -140,6 +159,26 @@ mutable struct odevae
     dynamics::Function # either ODEprob or params for analytical solution function 
 end
 
+"""
+    ModelArgs
+
+Struct to store model arguments, can be constructed with keyword arguments to set the following fields:
+- `p`: number of VAE input dimensions, i.e., number of time-dependent variables
+- `q`: number of input dimensions for the baseline neural net, i.e., number of baseline variables
+- `zdim`: number of latent dimensions
+- `dynamics`: one of `params_fullinhomogeneous`, `params_offdiagonalinhomogeneous`, 
+    `params_diagonalinhomogeneous`, `params_driftonly`, `params_fullhomogeneous`, 
+    `params_offdiagonalhomogeneous`, `params_diagonalhomogeneous`: function to map a parameter vector
+    (=the output of the `ODEnet`) to the system matrix and constant vector of the ODE system
+- `seed`: random seed for reproducibility
+- `bottleneck`: whether to use a bottleneck layer in the `ODEnet` 
+    to reduce the number of effective parameters for higher-dimensional systems
+- `init_scaled`: whether to initialize the `ODEnet` with scaled weights
+- `scale_sigmoid`: scaling factor for the sigmoid function used to shift the ODE parameters 
+    to a sensible range, acting as a prior
+- `add_diagonal`: whether to add a diagonal transformation to output of the `ODEnet` to add
+    flexibility after the sigmoid transformation
+"""
 @with_kw struct ModelArgs
     p::Int
     q::Int
@@ -152,6 +191,22 @@ end
     add_diagonal::Bool=true
 end
 
+"""
+    LossArgs
+
+Struct to store loss arguments, can be constructed with keyword arguments to set the following fields:
+- `λ_μpenalty`: weight for the penalty that encourages consistency of the mean before and after solving the ODEs
+- `λ_variancepenalty`: weight for the penalty on the variance of the ODE estimator
+- `variancepenaltytype`: one of `:ratio_sum`, `:sum_ratio`, `:log_diff`: 
+    type of penalty on the variance of the ODE estimator
+- `variancepenaltyoffset`: offset used in the penalty on the variance of the latent space
+- `firstonly`: whether to use only the first time point for solving the ODE (if `false`, 
+    an ODE is solved with each time point as initial condition and the individual solutions are averaged)
+- `weighting`: whether to calculate inverse-variance weights for the contribution of other time points 
+    in the ODE trajectory estimator or use just equal weights for all ODE solutions
+- `skipt0`: whether to skip the first time point in the ODE estimator 
+    (to prevent the model from using just the initial condition and pushing the weights of all other solutions to zero)
+"""
 @with_kw struct LossArgs
     λ_μpenalty::Float32 = 0.0f0
     λ_variancepenalty::Float32 = 0.0f0
@@ -178,6 +233,13 @@ function get_nODEparams(dynamics::Function)
 end
 
 # initialise model
+"""
+    odevae(modelargs::ModelArgs)
+
+Function to initialize the ODE-VAE model according to the arguments passed in `modelargs`.
+
+Returns an `odevae` model.
+"""
 function odevae(modelargs::ModelArgs)
     nODEparams = get_nODEparams(modelargs.dynamics)
     myinit = modelargs.init_scaled ? downscaled_glorot_uniform : Flux.glorot_uniform 
@@ -321,6 +383,19 @@ end
 # loss functions 
 #------------------------------
 
+"""
+    loss(X, Y, t, m::odevae; args::LossArgs)
+
+Compute the loss of the ODE-VAE model `m` on a batch of data, consisting of 
+    time-dependent variables `X`, baseline variables `Y` and time point `t`. 
+
+Details of the loss function behaviour, including additional penalties, are controlled by the 
+    keyword arguments `args` of type `LossArgs`, see `?LossArgs` for details.
+
+Returns the mean ELBO, where the ODE estimator of the underlying trajectory is used to decode the latent 
+    value at the time points `t` and obtain a reconstruction according to these smooth latent dynamics 
+    as specified by the ODE system.
+"""
 function loss(X, Y, t, m::odevae; args::LossArgs)
     latentμ, latentlogσ = m.encodedμ(m.encoder(X)), m.encodedlogσ(m.encoder(X))
     params = vec(m.ODEnet(Y))
@@ -358,6 +433,36 @@ end
 # train model 
 #------------------------------
 
+"""
+    train_model!(m::odevae, 
+        xs, xs_baseline, tvals, 
+        lr, epochs, args::LossArgs; 
+        selected_ids=nothing, 
+        verbose::Bool=true, 
+        plotting::Bool=true
+        )
+
+Train the ODE-VAE model `m` on a dataset of time-dependent variables `xs`, 
+    baseline variables `xs_baseline` and time points `tvals`. The structure of these 
+    is assumed to be as in the `SMATestData` and `simdata` structs. 
+
+# Arguments
+- `m`: the ODE-VAE model to train
+- `xs`: a vector of matrices of time-dependent variables for each patient
+- `xs_baseline`: a vector of vectors of baseline variables for each patient
+- `tvals`: a vector of vectors of time points for each patient
+- `lr`: the learning rate of the ADAM optimizer
+- `epochs`: the number of epochs to train for
+- `args`: arguments controlling the loss function behaviour, see `?LossArgs` for details
+- `selected_ids`: the IDs of the patients to plot during training to monitor progress,
+    if `nothing` (default) then 12 random IDs are selected
+- `verbose`: whether to print the epoch and loss value during training
+- `plotting`: whether to visualize the learnt latent trajectories of selected patients 
+    (those with the `selected_ids`)
+
+# Returns 
+- `m`: the trained ODE-VAE model
+"""
 function train_model!(m::odevae, 
     xs, xs_baseline, tvals, 
     lr, epochs, args::LossArgs; 

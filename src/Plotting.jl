@@ -1,13 +1,17 @@
 using GLM
 
-mutable struct SMATestData
-    test::String
-    xs::Vector{Matrix{Float32}}
-    xs_baseline::Vector{Vector{Float32}}
-    tvals::Vector{Vector{Float32}}
-    ids::Vector
-end
+#mutable struct SMATestData
+#    test::String
+#    xs::Vector{Matrix{Float32}}
+#    xs_baseline::Vector{Vector{Float32}}
+#    tvals::Vector{Vector{Float32}}
+#    ids::Vector
+#end
 
+"""
+    createindividualplot(m::odevae, testdata::SMATestData, args::LossArgs, patient_id; 
+        axislabs::Bool=false, title::String="", showOLS::Bool=true)
+"""
 function createindividualplot(m::odevae, testdata::SMATestData, args::LossArgs, patient_id; 
     axislabs::Bool=false, title::String="", showOLS::Bool=true)
     idx=findall(x -> x == patient_id, testdata.ids)
@@ -44,6 +48,10 @@ function createindividualplot(m::odevae, testdata::SMATestData, args::LossArgs, 
     return curplot
 end
 
+"""
+    createindividualplot_piecewise(m::odevae, testdata::SMATestData, patient_id; 
+        title::String="", showOLS::Bool=true, axislabs::Bool=false)
+"""
 function createindividualplot_piecewise(m::odevae, testdata::SMATestData, patient_id; 
     title::String="", showOLS::Bool=true, axislabs::Bool=false)
 
@@ -91,7 +99,14 @@ function createindividualplot_piecewise(m::odevae, testdata::SMATestData, patien
     return curplot
 end
 
-function plot_selected_ids_piecewise(m::odevae, testdata::SMATestData, selected_ids::Array; showOLS::Bool=true)
+"""
+    plot_selected_ids_piecewise(m::odevae, testdata::SMATestData, args::LossArgs, selected_ids::Array; 
+        showOLS::Bool=true
+    )
+"""
+function plot_selected_ids_piecewise(m::odevae, testdata::SMATestData, selected_ids::Array; 
+    showOLS::Bool=true
+    )
     sel_array = []
     for (ind, patient_id) in enumerate(selected_ids)
         push!(sel_array, createindividualplot_piecewise(m, testdata, patient_id, title="$(patient_id)", showOLS=showOLS))
@@ -100,7 +115,13 @@ function plot_selected_ids_piecewise(m::odevae, testdata::SMATestData, selected_
     return panelplot
 end
 
-function plot_selected_ids(m::odevae, testdata::SMATestData, args::LossArgs, selected_ids::Array; showOLS::Bool=true)
+"""
+    plot_selected_ids(m::odevae, testdata::SMATestData, args::LossArgs, selected_ids::Array; 
+        showOLS::Bool=true)
+"""
+function plot_selected_ids(m::odevae, testdata::SMATestData, args::LossArgs, selected_ids::Array; 
+    showOLS::Bool=true
+    )
     sel_array = []
     for (ind, patient_id) in enumerate(selected_ids)
         push!(sel_array, createindividualplot(m, testdata, args, patient_id, title="$(patient_id)", showOLS=showOLS))
@@ -109,11 +130,13 @@ function plot_selected_ids(m::odevae, testdata::SMATestData, args::LossArgs, sel
     return panelplot
 end
 
-
 #------------------------------
 # Simulated data
 #------------------------------
 
+"""
+    plot_truesolution(group, data::simdata, t_range, sol_group1, sol_group2; showdata=true)
+"""
 function plot_truesolution(group, data::simdata, t_range, sol_group1, sol_group2; showdata=true)
     if group == 1
         sol = sol_group1
@@ -125,11 +148,11 @@ function plot_truesolution(group, data::simdata, t_range, sol_group1, sol_group2
         legendposition = :topright
     end
     curplot = plot(t_range, sol',
-                label = [L"\mathrm{true~solution~}z_1" L"\mathrm{true~solution~}z_2"],
-                legend = legendposition,
-                legendfontsize = 12,
-                line=(3, ["#ff7f0e" "#1f77b4"])
-                )
+        label = [L"\mathrm{true~solution~}z_1" L"\mathrm{true~solution~}z_2"],
+        legend = legendposition,
+        legendfontsize = 12,
+        line=(3, ["#ff7f0e" "#1f77b4"])
+    )
     if !showdata
         return curplot
     else
@@ -146,6 +169,15 @@ function plot_truesolution(group, data::simdata, t_range, sol_group1, sol_group2
     return curplot
 end
 
+"""
+    createindividualplot(m::odevae, data::simdata, idx::Int, sol::Matrix, trange, args::LossArgs;
+        title::String="", 
+        showtruesol::Bool=true,
+        axislabs::Bool=false, 
+        showOLS::Bool=true, 
+        colors_truesol::Array{String} = ["#ff7f0e" "#1f77b4"]
+    )
+"""
 function createindividualplot(m::odevae, data::simdata, idx::Int, sol::Matrix, trange, args::LossArgs; 
     title::String="", 
     showtruesol::Bool=true,
@@ -189,6 +221,16 @@ function createindividualplot(m::odevae, data::simdata, idx::Int, sol::Matrix, t
     return curplot
 end
 
+"""
+    eval_z_trajectories(m::odevae, data::simdata, inds::Array{Int}, 
+        sol_group1::Matrix, sol_group2::Matrix, t_range, args::LossArgs; 
+        title::String="", 
+        showtruesol::Bool=true,
+        axislabs::Bool=false, 
+        showOLS::Bool=true, 
+        swapcolorcoding::Bool=false
+    )
+"""
 function eval_z_trajectories(m::odevae, data::simdata, inds::Array{Int}, 
     sol_group1::Matrix, sol_group2::Matrix, t_range, args::LossArgs; 
     title::String="", 
@@ -217,6 +259,16 @@ function eval_z_trajectories(m::odevae, data::simdata, inds::Array{Int},
     display(myplot)
 end
 
+"""
+    createindividualplot_piecewise(m::odevae, data::simdata, ind::Int, sol::Matrix, t_range; 
+        title::String="", 
+        axislabs::Bool=false, 
+        showtruesol::Bool=true,
+        showOLS::Bool=true, 
+        showglobalOLS::Bool=false,
+        colors_truesol::Array{String} = ["#ff7f0e" "#1f77b4"]
+    )
+"""
 function createindividualplot_piecewise(m::odevae, data::simdata, ind::Int, sol::Matrix, t_range; 
     title::String="", 
     axislabs::Bool=false, 
@@ -294,6 +346,18 @@ function createindividualplot_piecewise(m::odevae, data::simdata, ind::Int, sol:
     return curplot
 end
 
+"""
+    plot_seleced_ids_piecewise(m::odevae, data::simdata, inds::Array{Int}, 
+        sol_group1::Matrix, sol_group2::Matrix, t_range; 
+        axislabs::Bool=false, 
+        showtruesol::Bool=true,
+        showtitle::Bool=true, 
+        showOLS::Bool=true, 
+        showglobalOLS::Bool=false,
+        swapcolorcoding::Bool=false, 
+        sort_inds::Bool=true
+        )
+"""
 function plot_selected_ids_piecewise(m::odevae, data::simdata, inds::Array{Int}, 
     sol_group1::Matrix, sol_group2::Matrix, t_range; 
     axislabs::Bool=false, 

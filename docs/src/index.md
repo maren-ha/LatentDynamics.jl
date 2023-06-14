@@ -17,7 +17,6 @@ Pages = [
     "data.md", 
     "dynamics.md",
     "vae.md", 
-    "optimization.md", 
     "plotting.md", 
     "evaluation.md"
 ]
