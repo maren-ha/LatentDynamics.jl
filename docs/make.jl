@@ -9,7 +9,6 @@ makedocs(
         "Data processing" => "data.md",
         "Dynamic model" => "dynamics.md",
         "VAE model" => "vae.md",
-        "Optimization" => "optimization.md",
         "Evaluation" => "evaluation.md",
         "Plotting" => "plotting.md"
     ]
