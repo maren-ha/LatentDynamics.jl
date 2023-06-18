@@ -8,6 +8,24 @@
 #------------------------------------------------------------------------------------------------
 
 # measure prediction performance at each time point after the first, for both regression and our approach. 
+"""
+    eval_prediction(m::odevae, testdata::SMATestData, n_future_tps::Int=1)
+
+Evaluate the prediction performance of the model on the latent representations. 
+
+# Arguments
+- `m::odevae`: trained `odevae` model
+- `testdata`: `SMATestData` object containing the SMArtCARE data
+- `n_future_tps::Int=1`: number of future time points to predict
+
+# Returns
+Vectors of prediction errors of different models for each patient (summed over all time points):
+- `ODEprederrs`: vector of prediction errors for the ODE model
+- `OLSprederrs`: vector of prediction errors for an OLS model, also fitted in a piecewise manner
+    similar to the ODE model
+- `interceptprederrs`: vector of prediction errors of an intercept model
+- `locfprederrs`: vector of prediction errors of a LOCF model
+"""
 function eval_prediction(m::odevae, testdata::SMATestData, n_future_tps::Int=1)
     ODEprederrs = []
     OLSprederrs = []
@@ -59,6 +77,24 @@ function eval_prediction(m::odevae, testdata::SMATestData, n_future_tps::Int=1)
     return ODEprederrs, OLSprederrs, locfprederrs, interceptprederrs
 end
 
+"""
+    eval_reconstructed_prediction(m::odevae, testdata::SMATestData, n_future_tps::Int=1)
+
+Evaluate the prediction performance of the model using the reconstructed data obtained from the decoder. 
+
+# Arguments
+- `m::odevae`: trained `odevae` model
+- `testdata`: `SMATestData` object containing the SMArtCARE data
+- `n_future_tps::Int=1`: number of future time points to predict
+
+# Returns
+Vectors of prediction errors of different models for each patient (summed over all time points):
+- `ODEprederrs`: vector of prediction errors for the ODE model
+- `OLSprederrs`: vector of prediction errors for an OLS model, also fitted in a piecewise manner
+    similar to the ODE model
+- `interceptprederrs`: vector of prediction errors of an intercept model
+- `locfprederrs`: vector of prediction errors of a LOCF model
+"""
 function eval_reconstructed_prediction(m::odevae, testdata::SMATestData, n_future_tps::Int=1)
     ODEprederrs = []
     OLSprederrs = []
@@ -115,6 +151,22 @@ function eval_reconstructed_prediction(m::odevae, testdata::SMATestData, n_futur
     return ODEprederrs, OLSprederrs, locfprederrs, interceptprederrs
 end
 
+"""
+    get_reconstructed_prediction(m::odevae, testdata::SMATestData)
+
+Get the reconstructions from an ODEVAE model, using different dynamic models in latent space, 
+and feeding the corresponding latent trajectories through the decoder to obtain reconstructions. 
+
+# Arguments
+- `m::odevae`: trained `odevae` model
+- `testdata`: `SMATestData` object containing the SMArtCARE data
+
+# Returns
+- `pred_xs_ODE`: reconstructed data using the ODE model
+- `pred_xs_OLS`: reconstructed data using the OLS model
+- `pred_xs_LOCF`: reconstructed data using the LOCF model
+- `pred_xs_IC`: reconstructed data using the intercept model
+"""
 function get_reconstructed_prediction(m::odevae, testdata::SMATestData)
 
     pred_xs_ODE = []
@@ -194,6 +246,24 @@ transform_back(X) = (sigmoid.(X) .- 0.1f0) .* 2.5f0
 # for simulated data 
 #------------------------------------------------------------------------------------------------
 
+"""
+    eval_prediction(m::odevae, data::simdata, n_future_tps::Int=1)
+
+Evaluate the prediction performance of the model on the latent representations. 
+
+# Arguments
+- `m::odevae`: trained `odevae` model
+- `testdata`: `simdata` object containing the simulated data
+- `n_future_tps::Int=1`: number of future time points to predict
+
+# Returns
+Vectors of prediction errors of different models for each patient (summed over all time points):
+- `ODEprederrs`: vector of prediction errors for the ODE model
+- `OLSprederrs`: vector of prediction errors for an OLS model, also fitted in a piecewise manner
+    similar to the ODE model
+- `interceptprederrs`: vector of prediction errors of an intercept model
+- `locfprederrs`: vector of prediction errors of a LOCF model
+"""
 function eval_prediction(m::odevae, data::simdata, n_future_tps::Int=1)
     ODEprederrs = []
     OLSprederrs = []
@@ -245,6 +315,25 @@ function eval_prediction(m::odevae, data::simdata, n_future_tps::Int=1)
     return ODEprederrs, OLSprederrs, locfprederrs, interceptprederrs
 end
 
+"""
+    eval_reconstructed_prediction(m::odevae, testdata::SMATestData, n_future_tps::Int=1)
+
+Evaluate the prediction performance of the model using the reconstructed data obtained from the decoder, 
+based on simulated data. 
+
+# Arguments
+- `m::odevae`: trained `odevae` model
+- `testdata`: `simdata` object containing the simulated data
+- `n_future_tps::Int=1`: number of future time points to predict
+
+# Returns
+Vectors of prediction errors of different models for each patient (summed over all time points):
+- `ODEprederrs`: vector of prediction errors for the ODE model
+- `OLSprederrs`: vector of prediction errors for an OLS model, also fitted in a piecewise manner
+    similar to the ODE model
+- `interceptprederrs`: vector of prediction errors of an intercept model
+- `locfprederrs`: vector of prediction errors of a LOCF model
+"""
 function eval_reconstructed_prediction(m::odevae, data::simdata, n_future_tps::Int=1)
     ODEprederrs = []
     OLSprederrs = []
