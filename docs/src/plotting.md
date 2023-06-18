@@ -48,8 +48,12 @@ eval_z_trajectories
 ### Panels of trajectories 
 
 ```@docs
-plot_seleced_ids_piecewise(m::odevae, data::simdata, inds::Array{Int}, 
-        sol_group1::Matrix, sol_group2::Matrix, t_range; 
+plot_seleced_ids_piecewise(m::odevae, 
+        data::simdata, 
+        inds::Array{Int}, 
+        sol_group1::Matrix, 
+        sol_group2::Matrix, 
+        t_range; 
         axislabs::Bool=false, 
         showtruesol::Bool=true,
         showtitle::Bool=true, 
@@ -57,7 +61,7 @@ plot_seleced_ids_piecewise(m::odevae, data::simdata, inds::Array{Int},
         showglobalOLS::Bool=false,
         swapcolorcoding::Bool=false, 
         sort_inds::Bool=true
-)
+    )
 ```
 
 ## SMArtCARE data 
