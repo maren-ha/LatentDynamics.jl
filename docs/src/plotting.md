@@ -12,7 +12,12 @@ plot_truesolution
 ### Individual trajectories
 
 ```@docs
-createindividualplot(m::odevae, data::simdata, idx::Int, sol::Matrix, trange, args::LossArgs;
+createindividualplot(m::odevae, 
+        data::simdata, 
+        idx::Int, 
+        sol::Matrix, 
+        trange, 
+        args::LossArgs;
         title::String="", 
         showtruesol::Bool=true,
         axislabs::Bool=false, 
@@ -22,7 +27,11 @@ createindividualplot(m::odevae, data::simdata, idx::Int, sol::Matrix, trange, ar
 ```
 
 ```@docs
-createindividualplot_piecewise(m::odevae, data::simdata, ind::Int, sol::Matrix, t_range; 
+createindividualplot_piecewise(m::odevae, 
+        data::simdata, 
+        ind::Int, 
+        sol::Matrix, 
+        t_range; 
         title::String="", 
         axislabs::Bool=false, 
         showtruesol::Bool=true,
@@ -56,17 +65,24 @@ plot_seleced_ids_piecewise(m::odevae, data::simdata, inds::Array{Int},
 ### Individual trajectories
 
 ```@docs
-createindividualplot(m::odevae, testdata::SMATestData, args::LossArgs, patient_id; 
-        axislabs::Bool=false, title::String="", showOLS::Bool=true)
+createindividualplot(m::odevae, 
+        testdata::SMATestData, 
+        args::LossArgs, 
+        patient_id; 
+        axislabs::Bool=false, 
+        title::String="", 
+        showOLS::Bool=true
+)
 ```
 
 ```@docs
-createindividualplot_piecewise(m::odevae, testdata::SMATestData, patient_id; 
-        title::String="", showOLS::Bool=true, axislabs::Bool=false)
-```
-
-```@docs
-eval_z_trajectories
+createindividualplot_piecewise(m::odevae, 
+        testdata::SMATestData, 
+        patient_id; 
+        title::String="", 
+        showOLS::Bool=true, 
+        axislabs::Bool=false
+)
 ```
 
 ### Panels of trajectories 
@@ -76,8 +92,10 @@ plot_selected_ids
 ```
 
 ```@docs
-plot_selected_ids_piecewise(m::odevae, testdata::SMATestData, args::LossArgs, selected_ids::Array; 
-        showOLS::Bool=true
+plot_selected_ids_piecewise(m::odevae, 
+    testdata::SMATestData,
+    selected_ids::Array; 
+    showOLS::Bool=true
 )
 ```
 
