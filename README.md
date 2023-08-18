@@ -6,12 +6,29 @@
 
 ## Overview
 
-This is a Julia package for fitting dynamic models based on ODEs in the latent space of a VAE. Specifically, it implements an approach where each observation serves as the initial value to obtain multiple local ODE solutions which are used to build an inverse-variance weighted estimator of the underlying dynamics. This reduces dependence of the ODE solution on the initial condition and can provide more robust estimation of the underlying trajectory particularly in settings with a high level of noicse. To deal with a larger number of variables, the approach is combined with a VAE for dimension reduction, as the ODE systems are defined and solved in the latent space of a VAE model.
-The model has been developed for the setting of a clinical registry, e.g., from a rare disease, where data might be noisy and heterogeneous and only few and irregular time points are available per patients. In this setting, we use the characterization of patients at the baseline time point to learn individual trajectories, by mapping each patient's baseline variables with an additional neural network to a set of individual-specific ODE parameters. We simultaneously optimize all components, the VAE for dimension reduction, the dynamic model and the network for mapping baseline variables to ODE parameters, using differentiable programming. This allows for finding a low-dimensional representation that is specifically adapted to the underlying trajectories as described by the person-specific ODE systems. 
+This is a Julia package for fitting dynamic models based on ODEs in the latent space of a VAE. Specifically, it implements a statistical approach based on ODEs, where each observation serves as the initial value to obtain multiple local ODE solutions. The solutions are combined into an inverse-variance weighted estimator of the underlying dynamics. This reduces dependence of the ODE solution on the initial condition and provide a more robust estimation of the underlying trajectory, particularly in settings with a high level of noicse. 
+The ODEs are solved in the latent space of a VAE model, to reflect the assumption of an underlying latent process driving the observed measurements, for which the dynamics shall be modeled. 
 
-The package includes functions for defining and training the VAE with and ODE-based dynamic in latent space, including a wide range of customizable hyperparameters and options for controlling the training behavior. There are also different choices for the underlying ODE system with different numbers of parameters. Further, the package provides functions for visualizing the learned latent trajectories and evaluating prediction performance at subsequent time points, both in latent space and on the reconstructed data and in comparison to simpler baseline models. In addition, the package provides functions for loading and pre-processing data from the SMArtCARE registry on spinal muscular atrophy (SMA) patients, which is used as an example application in the corresponding manuscript, and, as this data is not publicly available, for simulating data with a similar structure. 
+This illustrates how this enables the use of ODEs in longitudinal clinical registries, specifically focusing on the scenario of a rare disease registry on patients with spinal muscular atrophy (SMA), where data is noisy and heterogeneous and only few and irregular time points are available per patients. 
 
-For more details, please have a look at our manuscript [Hackenberg et al. (2023) A statistical approach to latent dynamic modeling with differential equations](arXiv_link).
+We use the characterization of patients at the baseline time point to infer individual-specific ODE parameters for personalized dynamics using an additional neural network. All model components are optimized simultaneously based on differentiable programming, such that a low-dimensional representation can be found that is specifically adapted to the underlying trajectories as described by the person-specific ODE systems.
+
+The package includes functions for defining and training the VAE with and ODE-based dynamic in latent space, including a wide range of customizable hyperparameters and options for controlling the training behavior. Different choices for the underlying ODE system with different numbers of parameters are available. Further, the package provides functions for visualizing the learned latent trajectories and evaluating prediction performance at subsequent time points, both in latent space and on the reconstructed data and in comparison to simpler baseline models. The package provides functions for loading and pre-processing data from the SMArtCARE registry on spinal muscular atrophy (SMA) patients, which is used as an example application in the corresponding manuscript. As this data is not publicly available, we additionally provide functions for simulating data with a similar structure. 
+
+For details, please have a look at our preprint [Hackenberg et al. (2023) A statistical approach to latent dynamic modeling with differential equations](arXiv_link).
+
+## What's in this repository 
+
+- `src`: source code of the package
+- `docs`: documentation of the package
+- `figures`: figure used for the README
+- `notebooks`: Jupyter notebooks that illustrate usage of the package and how the figures and results in the manuscript can be reproduced
+- some housekeeping files: 
+  - `Project.toml`: list of dependencies
+  - `Manifest.toml`: list of dependencies with specific versions
+  - `.gitignore`: files to be ignored by git
+  - `LICENSE.md`: license information
+- this `README.md` file 
 
 ## Getting started 
 
