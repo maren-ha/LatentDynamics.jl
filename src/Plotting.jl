@@ -63,10 +63,10 @@ function createindividualplot(m::odevae,
         smoothμs = hcat([get_smoothμ(targetind, curtvals, solarray, false, false) for targetind in 1:length(trange)]...)
         #smoothμs = hcat([get_smoothμ(solveatt, curtvals, latentμ, latentlogσ, ODEparams, args.weighting, false) for solveatt in trange]...)
     end
-    curplot = plot(collect(trange), smoothμs', line=(2, ["#1f77b4" "#ff7f0e"]), labels = [L"\mathrm{smooth~}\mu_1" L"\mathrm{smooth~}\mu_2"])
+    curplot = plot(collect(trange), smoothμs', line=(3, ["#1f77b4" "#ff7f0e"]), labels = [L"\mathrm{smooth~}\mu_1" L"\mathrm{smooth~}\mu_2"])
     if showOLS
         OLSfit = hcat(predict(lm(@formula(Y~X), DataFrame(X=Float64.(curtvals), Y=Float64.(latentμ[1,:])))), predict(lm(@formula(Y~X), DataFrame(X=Float64.(curtvals), Y=Float64.(latentμ[2,:])))))
-        plot!(curtvals, OLSfit, line = (2,"red"), label ="")
+        plot!(curtvals, OLSfit, line = (3, "#e70f4f", :dash), label ="")
     end
     Plots.scatter!(curtvals, latentμ[1,:], marker = (:c, 6, "#1f77b4"), label = L"\mu_1 \mathrm{~from~encoder}") 
     Plots.scatter!(curtvals, latentμ[2,:], marker = (:c, 6, "#ff7f0e"), label = L"\mu_2 \mathrm{~from~encoder}", title="$patient_id")
@@ -121,7 +121,7 @@ function createindividualplot_piecewise(m::odevae,
         cursmoothμ = hcat([generalsolution(curt-curtvals[tp_ind], latentμ[:,tp_ind], ODEparams...)[1] for curt in curtrange]...)
         labels = (tp_ind == length(curtvals)-1) ? [L"\mathrm{local~ODE~solution~}\widetilde{\mu_1}" L"\mathrm{local~ODE~solution~}\widetilde{\mu_2}"] : ""
         plot!(collect(curtrange), cursmoothμ', 
-                    line=(2, ["#1f77b4" "#ff7f0e"]), 
+                    line=(3, ["#1f77b4" "#ff7f0e"]), 
                     labels = labels, 
                     ribbon=sqrt.(exp.(latentlogσ[:,tp_ind]')), 
                     fillcolor = ["#c6dbef" "#fdd0a2"])
@@ -138,12 +138,12 @@ function createindividualplot_piecewise(m::odevae,
             curOLSfit = mapslices(x -> x - offset, curOLSfit, dims=2)
             #push!(OLSfits, curOLSfit)
             label = (tp_ind == length(curtvals)-1) ? L"\mathrm{linear~regression}" : ""    
-            plot!(collect(curtrange), curOLSfit, line=(2, "#7b4173"), label = label)
+            plot!(collect(curtrange), curOLSfit, line=(3, "#e70f4f", :dash), label = label)
             #plot!(curtvals[tp_ind:tp_ind+1], vcat(latentμ[:, tp_ind]', curOLSfit), line=(2, "red"), label = label)
         end
     end
-    Plots.scatter!(curtvals, latentμ[1,:], marker = (:c, 4, "#1f77b4"), label = L"\mu_1 \mathrm{~from~encoder}") 
-    Plots.scatter!(curtvals, latentμ[2,:], marker = (:c, 4, "#ff7f0e"), label = L"\mu_2 \mathrm{~from~encoder}", title=title)
+    Plots.scatter!(curtvals, latentμ[1,:], marker = (:c, 6, "#1f77b4"), label = L"\mu_1 \mathrm{~from~encoder}") 
+    Plots.scatter!(curtvals, latentμ[2,:], marker = (:c, 6, "#ff7f0e"), label = L"\mu_2 \mathrm{~from~encoder}", title=title)
 
     if axislabs
         plot!(xlab="time in months", ylab="value of latent representation")
@@ -330,7 +330,7 @@ function createindividualplot(m::odevae,
             label = [L"\mathrm{true~solution~}u_1" L"\mathrm{true~solution~}u_2"],
             legend = :topleft,
             legendfontsize = 12,
-            line=([:dot :dot], 3, colors_truesol)
+            line=([:dot :dot], 4, colors_truesol)
         )
     else
         curplot = plot(xlimits = (0, 10))
@@ -342,10 +342,10 @@ function createindividualplot(m::odevae,
         solarray = [generalsolution(solveatt - curtvals[startind], latentμ[:,startind], ODEparams...)[1] for startind in 1:length(curtvals), solveatt in trange]
         smoothμs = hcat([get_smoothμ(targetind, curtvals, solarray, false, false) for targetind in 1:length(trange)]...)
     end
-    plot!(trange, smoothμs', line=(2, ["#1f77b4" "#ff7f0e"]), labels = [L"\mathrm{smooth~}\mu_1" L"\mathrm{smooth~}\mu_2"])
+    plot!(trange, smoothμs', line=(3, ["#1f77b4" "#ff7f0e"]), labels = [L"\mathrm{smooth~}\mu_1" L"\mathrm{smooth~}\mu_2"])
     if showOLS
         OLSfit = hcat(predict(lm(@formula(Y~X), DataFrame(X=Float64.(curtvals), Y=Float64.(latentμ[1,:])))), predict(lm(@formula(Y~X), DataFrame(X=Float64.(curtvals), Y=Float64.(latentμ[2,:])))))
-        plot!(curtvals, OLSfit, line = (2,"red"), label ="")
+        plot!(curtvals, OLSfit, line = (3, "#e70f4f", :dash), label ="")
     end
     Plots.scatter!(curtvals, latentμ[1,:], marker = (:c, 6, "#1f77b4"), label = L"\mu_1 \mathrm{~from~encoder}") 
     Plots.scatter!(curtvals, latentμ[2,:], marker = (:c, 6, "#ff7f0e"), label = L"\mu_2 \mathrm{~from~encoder}")
@@ -480,7 +480,7 @@ function createindividualplot_piecewise(m::odevae,
         label = [L"\mathrm{true~solution~}z_1" L"\mathrm{true~solution~}z_2"],
         legend = :topleft,
         legendfontsize = 12,
-        line=([:dot :dot], 3, colors_truesol)
+        line=([:dot :dot], 4, colors_truesol)
     )
     else
         curplot = plot(xlimits = (0, 10))
@@ -491,7 +491,7 @@ function createindividualplot_piecewise(m::odevae,
         cursmoothμ = hcat([generalsolution(curt-mod_tvals[tp_ind], latentμ[:,tp_ind], ODEparams...)[1] for curt in curtrange]...)
         labels = (tp_ind == length(mod_tvals)-1) ? [L"\mathrm{local~ODE~solution~}\widetilde{\mu_1}" L"\mathrm{local~ODE~solution~}\widetilde{\mu_2}"] : ""
         plot!(collect(curtrange), cursmoothμ', 
-                    line=(2, ["#1f77b4" "#ff7f0e"]), 
+                    line=(3, ["#1f77b4" "#ff7f0e"]), 
                     labels = labels, 
                     ribbon=sqrt.(exp.(latentlogσ[:,tp_ind]')), 
                     fillcolor = ["#c6dbef" "#fdd0a2"])
@@ -508,7 +508,7 @@ function createindividualplot_piecewise(m::odevae,
             curOLSfit = mapslices(x -> x - offset, curOLSfit, dims=2)
             #push!(OLSfits, curOLSfit)
             label = (tp_ind == length(mod_tvals)-1) ? L"\mathrm{linear~regression}" : ""    
-            plot!(collect(curtrange), curOLSfit, line=(2, "red"), label = label)
+            plot!(collect(curtrange), curOLSfit, line=(3, "#e70f4f", :dash), label = label)
             #plot!(curtvals[tp_ind:tp_ind+1], vcat(latentμ[:, tp_ind]', curOLSfit), line=(2, "red"), label = label)
         end
     end
@@ -527,11 +527,11 @@ function createindividualplot_piecewise(m::odevae,
                 DataFrame(X=Float64.(mod_tvals))
             )
         )
-        plot!(mod_tvals, globalOLSfit, line = (2,"red"), label = L"\mathrm{linear~regression}")
+        plot!(mod_tvals, globalOLSfit, line = (3, "#e70f4f", :dash), label = L"\mathrm{linear~regression}")
     end
 
-    Plots.scatter!(curtvals, latentμ[1,:], marker = (:c, 4, "#1f77b4"), label = L"\mu_1 \mathrm{~from~encoder}") 
-    Plots.scatter!(curtvals, latentμ[2,:], marker = (:c, 4, "#ff7f0e"), label = L"\mu_2 \mathrm{~from~encoder}", title=title)
+    Plots.scatter!(curtvals, latentμ[1,:], marker = (:c, 6, "#1f77b4"), label = L"\mu_1 \mathrm{~from~encoder}") 
+    Plots.scatter!(curtvals, latentμ[2,:], marker = (:c, 6, "#ff7f0e"), label = L"\mu_2 \mathrm{~from~encoder}", title=title)
 
     if axislabs
         plot!(xlab="time in months", ylab="value of latent representation")
