@@ -1,6 +1,6 @@
 # LatentDynamics.jl 
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://maren-ha.github.io/LatentDynamics.jl/dev/)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://maren-ha.github.io/LatentDynamics.jl/dev/)
 
 ![](figures/repo_intro_simulation.jpg)
 
