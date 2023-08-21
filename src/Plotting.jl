@@ -112,7 +112,7 @@ function plot_selected_ids_piecewise(m::odevae, testdata::SMATestData, selected_
     panelplot = plot(sel_array..., layout=mylayout, legend=false, size=mysize)
 
     save_plot && savefig(panelplot, save_path)
-    
+
     return panelplot
 end
 
@@ -146,18 +146,9 @@ function plot_selected_ids(m::odevae, testdata::SMATestData, args::LossArgs, sel
     return panelplot
 end
 
-
 #------------------------------
 # Simulated data
 #------------------------------
-
-struct simdata
-    xs
-    x_baseline
-    tvals
-    group1
-    group2
-end
 
 function plot_truesolution(group, data::simdata, t_range, sol_group1, sol_group2; showdata=true)
     if group == 1
