@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://maren-ha.github.io/LatentDynamics.jl/dev/)
 
-![](figures/repo_intro_simulation.jpg)
+![](figures/repo_overviewfigure.jpg)
 
 ## Overview
 
@@ -41,6 +41,8 @@ using LatentDynamics
 ```
 
 ## Demo example 
+
+![](figures/repo_intro_simulation.jpg)
 
 An simple example of how to use the package on simulated data is provided in the `Simulation.ipynb` notebook in the `notebooks` subfolder. 
 
