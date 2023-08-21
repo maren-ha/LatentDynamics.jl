@@ -466,13 +466,13 @@ Train the ODE-VAE model `m` on a dataset of time-dependent variables `xs`,
 function train_model!(m::odevae, 
     xs, xs_baseline, tvals, 
     lr, epochs, args::LossArgs; 
-    selected_ids=nothing, 
-    verbose::Bool=true, 
-    plotting::Bool=true
+    verbose::Bool=true,
+    plotting::Bool=true,
+    plot_func::Function= x->nothing
     )
-    if (isnothing(selected_ids) || length(selected_ids) != 12) && plotting
-        selected_ids = rand(ids,12)
-    end
+    #if (isnothing(selected_ids) || length(selected_ids) != 12) && plotting
+    #    selected_ids = rand(ids,12)
+    #end
     # prepare training
     ps = getparams(m)
     opt = ADAM(lr)
@@ -494,7 +494,7 @@ function train_model!(m::odevae,
         end
         state = copy(Random.default_rng());
         verbose && evalcb()
-        plotting && display(plot_selected_ids(m, testdata, args, selected_ids))
+        plotting && display(plot_func(m))
         #evalcb_zs()
     end
     return m
