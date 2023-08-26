@@ -15,7 +15,7 @@ We use the characterization of patients at the baseline time point to infer indi
 
 The package includes functions for defining and training the VAE with and ODE-based dynamic in latent space, including a wide range of customizable hyperparameters and options for controlling the training behavior. Different choices for the underlying ODE system with different numbers of parameters are available. Further, the package provides functions for visualizing the learned latent trajectories and evaluating prediction performance at subsequent time points, both in latent space and on the reconstructed data and in comparison to simpler baseline models. The package provides functions for loading and pre-processing data from the SMArtCARE registry on spinal muscular atrophy (SMA) patients, which is used as an example application in the corresponding manuscript. As this data is not publicly available, we additionally provide functions for simulating data with a similar structure. 
 
-For details, please have a look at our preprint [Hackenberg et al. (2023) A statistical approach to latent dynamic modeling with differential equations](arXiv_link).
+Our preprint "A statistical approach to latent dynamic modeling with differential equations" with all the details will be uploaded to arXiv and linked here within the next few days (as of August 26, 2023) - stay tuned!
 
 ## What's in this repository 
 
