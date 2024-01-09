@@ -4,6 +4,7 @@ using LatentDynamics
 makedocs(
     sitename = "LatentDynamics.jl",
     format = Documenter.HTML(prettyurls = false),
+    warnonly = true,
     pages = [
         "Introduction" => "index.md",
         "Data processing" => "data.md",
