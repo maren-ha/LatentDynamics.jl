@@ -6,6 +6,12 @@
 # ODE solutions
 #------------------------------
 
+# non-mutating sanitizers
+replace_nonfinite(A) = map(x -> isfinite(x) ? x : zero(eltype(A)), A)
+sanitize(A) = clamp.(replace_nonfinite(A), -30, 30)  # returns a NEW array
+
+sanitize_scalar(x::T) where {T<:AbstractFloat} = isfinite(x) ? x : zero(T)
+
 # calculate analytical solution from A, c, x0
 
 """
@@ -17,7 +23,17 @@ Calculates the analytical solution of a linear system of ODEs with constant coef
 Returns the solution `x(t)` and the matrix exponential `e^{At}`.
 """
 function generalsolution(t, x0::Vector{Float32}, A::Matrix{Float32}, c::Vector{Float32})
-    eAt = exp(A.*t)
+
+    # sanitize scalars/params
+    #t2 = sanitize_scalar(float(t))
+    A2  = sanitize(A)    # no mutation, new matrix
+    #c2  = sanitize(c)
+    #x02 = sanitize(x0)
+
+    # safe exponential
+    eAt = exp(t .* A2)   # or E = safe_expm(t2 .* A2)
+
+    #eAt = exp(A.*t)
     return eAt*(c + x0) - c, eAt
 end
 
@@ -46,7 +62,7 @@ function params_fullinhomogeneous(p::Vector{Float32})
         error("2D inhomogeneous linear system requires 6 parameters, but p is of length $(length(p))")
     end
     A = Matrix(reshape(p[1:4], (2,2)))
-    c = inv(A)*p[5:6]
+    c = A \ p[5:6]
     return A, c
 end
 
@@ -62,7 +78,7 @@ function params_offdiagonalinhomogeneous(p::Vector{Float32})
         error("2D inhomogeneous linear system with only off-diagonals requires 4 parameters, but p is of length $(length(p))")
     end
     A = Matrix(reshape([0.0f0 p[1] p[2] 0.0f0], (2,2)))
-    c = inv(A)*p[3:4]
+    c = A \ p[3:4]
     return A, c
 end
 
@@ -77,7 +93,7 @@ function params_diagonalinhomogeneous(p::Vector{Float32})
         error("2D inhomogeneous linear system with only diagonals requires 4 parameters, but p is of length $(length(p))")
     end
     A = Matrix(reshape([p[1] 0.0f0 0.0f0 p[2]], (2,2)))
-    c = inv(A)*p[3:4]
+    c = A \ p[3:4]
     return A, c
 end
 
@@ -158,6 +174,17 @@ mutable struct odevae
     decodedlogσ 
     dynamics::Function # either ODEprob or params for analytical solution function 
 end
+
+Functors.@functor odevae  # enables Functors.fmap over fields
+
+# Optionally, if some fields are non-trainable (hyperparams), hide them:
+Flux.trainable(m::odevae) = (ODEnet = m.ODEnet,
+                                  encoder = m.encoder,
+                                  encodedμ = m.encodedμ,
+                                  encodedlogσ = m.encodedlogσ,
+                                  decoder = m.decoder,
+                                  decodedμ = m.decodedμ,
+                                  decodedlogσ = m.decodedlogσ)
 
 """
     ModelArgs
@@ -258,13 +285,14 @@ function odevae(modelargs::ModelArgs)
         ]
     end
     if modelargs.add_diagonal
-        ODEnet = Chain(ODEnet..., Flux.Diagonal(nODEparams))
+        d = ones(Float32, nODEparams)
+        ODEnet = Chain(ODEnet..., x -> Diagonal(d) * x)
     else
         ODEnet = Chain(ODEnet...)
     end
     #   VAE encoder
     Dz, Dh = modelargs.zdim, modelargs.p
-    encoder, encodedμ, encodedlogσ = Dense(modelargs.p, Dh, arg ->(tanh.(arg) .+ 1)), Dense(Dh, Dz), Chain(Dense(Dh, Dz, arg -> -Flux.relu(arg)), Flux.Diagonal(Dz))
+    encoder, encodedμ, encodedlogσ = Dense(modelargs.p, Dh, arg ->(tanh.(arg) .+ 1)), Dense(Dh, Dz), Chain(Dense(Dh, Dz, arg -> -Flux.relu(arg)), x -> Diagonal(ones(Float32, Dz)) * x)
     # VAE decoder
     decoder, decodedμ, decodedlogσ = Dense(Dz, Dh, tanh), Dense(Dh, modelargs.p), Dense(Dh, modelargs.p)
 
@@ -293,18 +321,34 @@ end
 # define model functions 
 #------------------------------
 
-latentz(μ, logσ) = μ .+ sqrt.(exp.(logσ)) .* randn(Float32,size(μ)...) # sample latent z,
+#latentz(μ, logσ) = μ .+ sqrt.(exp.(logσ)) .* randn(Float32,size(μ)...) # sample latent z,
+
+function latentz(μ, logσ; rng=Random.default_rng())
+    σ = @. sqrt(clamp(exp(logσ), 1f-6, 1f3))
+    ε = randn(rng, Float32, size(μ))            # one draw, right shape
+    return μ .+ σ .* ε
+end
 
 kl_q_p(μ, logσ) = 0.5f0 .* sum(exp.(logσ) + μ.^2 .- 1.0f0 .- (logσ),dims=1)
 
 #logp_x_z(m::odevae, x, z) = sum(logpdf.(Normal.(m.decodedμ(m.decoder(z)), sqrt.(exp.(m.decodedlogσ(m.decoder(z))))), x),dims=1) # get reconstruction error
 
-function logp_x_z(m::odevae, x::AbstractVecOrMat{S}, z::AbstractVecOrMat{S}) where S <: Real 
-    μ = m.decodedμ(m.decoder(z))
+const LOG2PI32 = Float32(log(2π))
+
+function logp_x_z(m::odevae, x::AbstractVecOrMat{S}, z::AbstractVecOrMat{S}) where {S<:Real}
+    μ    = m.decodedμ(m.decoder(z))
     logσ = m.decodedlogσ(m.decoder(z))
-    res = @fastmath (-(x .- μ).^2 ./ (2.0f0 .* exp.(logσ))) .- 0.5f0 .* (log(S(2π)) .+ logσ)
+    var  = @. clamp(exp(logσ), 1f-6, 1f3)       # ← floor/ceiling the variance
+    res  = @. - (x - μ)^2 / (2f0 * var) - 0.5f0*(LOG2PI32 + log(var))
     return sum(res, dims=1)
 end
+
+#function logp_x_z(m::odevae, x::AbstractVecOrMat{S}, z::AbstractVecOrMat{S}) where S <: Real 
+#    μ = m.decodedμ(m.decoder(z))
+#    logσ = m.decodedlogσ(m.decoder(z))
+#    res = @fastmath (-(x .- μ).^2 ./ (2.0f0 .* exp.(logσ))) .- 0.5f0 .* (log(S(2π)) .+ logσ)
+#    return sum(res, dims=1)
+#end
 
 sqnorm(x) = sum(abs2, x)
 reg(m::odevae) = sum(sqnorm, Flux.params(m.decoder,m.decodedμ,m.decodedlogσ)) # regularisation term in loss
@@ -332,7 +376,7 @@ function get_reconstruction(m::odevae, X, Y, t, args::LossArgs; sample::Bool=fal
         smoothμ = hcat([get_smoothμ(targetind, t, solarray, args.weighting, args.skipt0) for targetind in 1:length(t)]...)
     end
     if sample
-        z = latentz.(smoothμ, latentlogσ)
+        z = latentz(smoothμ, latentlogσ)
     else
         z = smoothμ
     end
@@ -408,7 +452,7 @@ function loss(X, Y, t, m::odevae; args::LossArgs)
         solarray = [get_solution(startind, targetind, t, latentμ, ODEparams) for startind in 1:length(t), targetind in 1:length(t)]
         smoothμ = hcat([get_smoothμ(targetind, t, solarray, args.weighting, args.skipt0) for targetind in 1:length(t)]...)
     end
-    z = latentz.(smoothμ, latentlogσ)
+    z = latentz(smoothμ, latentlogσ)
     ELBO = 1.0f0 .* logp_x_z(m, X, z) .- 0.5f0 .* kl_q_p(smoothμ, latentlogσ)# previous KL weight: 0.5
     penalties = 0.0f0
     if args.λ_μpenalty > 0.0f0
@@ -473,27 +517,37 @@ function train_model!(m::odevae,
     #if (isnothing(selected_ids) || length(selected_ids) != 12) && plotting
     #    selected_ids = rand(ids,12)
     #end
+
     # prepare training
-    ps = getparams(m)
-    opt = ADAM(lr)
-    trainingdata = zip(xs, xs_baseline, tvals);
+    # trainingdata is a plain Vector of tuples; can iterate multiple times
+    trainingdata = collect(zip(xs, xs_baseline, tvals))
 
-    # callback 
-    evalcb() = @show(mean(loss(data..., m, args=args) for data in trainingdata))
+    # optimiser state bound to the model
+    opt = Optimisers.Adam(lr)
+    opt_state = Optimisers.setup(opt, m)
 
+    # evaluation callback (explicit model arg)
+    evalcb() = @show(mean(loss(X, Y, t, m, args=args) for (X, Y, t) in trainingdata))
     # start training 
     state = copy(Random.default_rng());
     for epoch in 1:epochs
         verbose && @info epoch
         copy!(Random.default_rng(), state);
+        
+        # optional: shuffle data order each epoch
+        shuffle!(trainingdata)
+
+        counter = 1
         for (X, Y, t) in trainingdata
-            grads = Flux.gradient(ps) do 
-                loss(X, Y, t, m, args=args)
-            end
-            Flux.Optimise.update!(opt, ps, grads)
+            Δm = first(gradient(m -> loss(X, Y, t, m, args=args), m))
+            opt_state, m = Optimisers.update(opt_state, m, Δm)
+            counter += 1
         end
+
         state = copy(Random.default_rng());
-        verbose && evalcb()
+        if verbose # && (epoch % 5 == 0)
+            evalcb()
+        end
         plotting && display(plot_func(m))
         #evalcb_zs()
     end
