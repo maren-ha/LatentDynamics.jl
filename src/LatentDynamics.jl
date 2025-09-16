@@ -3,7 +3,10 @@ module LatentDynamics
 using DataFrames
 using Distributions 
 using Flux
+using Functors
+using Optimisers
 using GLM 
+using LinearAlgebra
 using LaTeXStrings
 using Plots
 using Parameters
