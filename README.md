@@ -17,9 +17,9 @@ The package includes functions for defining and training the VAE with and ODE-ba
 
 ## Preprint 
 
-Our preprint with all the details is available on arXiv: 
+The manuscript with all the details is now published in *The American Statistician*: 
 
-Hackenberg M, Pechmann A, Kreutz C, Kirschner J, Binder H. A statistical approach to latent dynamic modeling with differential equations. 2023. [arXiv:2311.16286](https://arxiv.org/abs/2311.16286)
+Hackenberg M, Pechmann A, Kreutz C, Kirschner J, Binder H. (2025). A statistical approach to latent dynamic modeling with differential equations. *The American Statistician*, 1-11. [DOI](https://www.tandfonline.com/doi/full/10.1080/00031305.2025.2539999)
 
 ## What's in this repository 
 
